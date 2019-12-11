@@ -4,24 +4,29 @@ import os
 import math
 
 UDP_IP = "127.0.0.1"
-UDP_PORT = 80
+UDP_PORT_IN = 8080
+# UDP_PORT_OUT = 8081
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-sock.bind((UDP_IP, UDP_PORT))
+sock.bind((UDP_IP, UDP_PORT_IN))
 
 packetsize = 32
 
 pos = 0
 
+prevdata = b''
+
 while True:
-    try:
-        data, addr = sock.recvfrom(packetsize)
-        if data:
-            sizein = len(data)
-            print("[recv data]", pos, sizein, "accepted")
-            pos += sizein
-        else:
-            exit(1)
-    except KeyboardInterrupt:
-        exit(1)
+    data, addr = sock.recvfrom(packetsize)
+    if data and prevdata != data:
+        sizein = len(data)
+        print("[recv data]", pos, sizein, "accepted")
+        # print(data)
+        message = "[recv ack] " + str(pos)
+        sock.sendto(message.encode(), addr)
+        prevdata = data
+        pos += sizein
+    if sizein < packetsize:
+        print("[completed]")
+        break
