@@ -31,7 +31,7 @@ sock.bind((UDP_IP, UDP_PORT_IN))
 
 sock.settimeout(timeout/1000)
 
-def sendpacket(p, pos, st):
+def sendpacket(p, st):
     checksum = 0
     for i in p:
         checksum += ord(i)
@@ -40,11 +40,17 @@ def sendpacket(p, pos, st):
     print(st, pos, len(p))
     # print(pack)
 
+def sendmultiple(n, packet, pos):
+    for i in range(n):
+        sendpacket(packet, pos, "[send data]")
+        packet = f.read(packetsize)
+        pos += packetsize
+    lfs = pos
 
 with open(filename, "r") as f:
     packet = f.read(packetsize)
     while packet:
-        sendpacket(packet, pos, "[send data]")
+        sendpacket(packet, "[send data]")
         ackno = False
         while not ackno:
             try:
@@ -57,8 +63,8 @@ with open(filename, "r") as f:
                         ackno = True
                         print(ackin[0], ackin[1])
                         packet = f.read(packetsize)
-                        pos += packetsize
+                        pos += 1
             except socket.timeout:
-                sendpacket(packet, pos, "[resend data]")
+                sendpacket(packet, "[resend data]")
         # pos += packetsize
     print("[completed]")

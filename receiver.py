@@ -17,6 +17,11 @@ pos = 0
 
 las = 0
 
+try:
+    open("recvfile.txt", "x")
+except FileExistsError:
+    pass
+
 while True:
     packet, addr = sock.recvfrom(packetsize+16)
     if packet:
@@ -31,11 +36,13 @@ while True:
             checksum += ord(i)
         if posin == pos:
             if int(checksumin) == checksum:
+                f = open("recvfile.txt", "a")
+                f.write(data)
                 print("[recv data]", pos, len(data), "ACCEPTED")
                 message = "[recv ack]," + str(pos)
                 sock.sendto(message.encode(), addr)
                 las = pos
-                pos += sizein
+                pos += 1
         elif posin == las:
             print("[recv data]", pos, len(data), "IGNORED")
             message = "[recv ack], " + str(las)
