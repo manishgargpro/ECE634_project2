@@ -15,30 +15,33 @@ packetsize = 32
 
 pos = 0
 
-prevdata = ""
+las = 0
 
 while True:
-    packet, addr = sock.recvfrom(packetsize+4)
+    packet, addr = sock.recvfrom(packetsize+16)
     if packet:
-        sizein = len(packet) - 4
-        data = packet.decode()[0:sizein]
+        packetd = packet.decode().split(',')
+        data = packetd[0]
+        checksumin = int(packetd[1])
+        posin = int(packetd[2])
+        # print(data, checksumin, posin, pos, las)
+        sizein = len(data)
         checksum = 0
         for i in data:
             checksum += ord(i)
-        checksumin = packet.decode()[sizein:len(packet)]
-        if prevdata != data:
+        if posin == pos:
             if int(checksumin) == checksum:
                 print("[recv data]", pos, len(data), "ACCEPTED")
-                # print(data, checksumin)
-                message = "[recv ack] " + str(pos)
+                message = "[recv ack]," + str(pos)
                 sock.sendto(message.encode(), addr)
-                prevdata = data
+                las = pos
                 pos += sizein
-        else:
-            print("[recv data]", pos - packetsize, sizein, "IGNORED")
-            # print(data)
-            message = "[recv ack] " + str(pos)
+        elif posin == las:
+            print("[recv data]", pos, len(data), "IGNORED")
+            message = "[recv ack], " + str(las)
             sock.sendto(message.encode(), addr)
+        else:            
+            print("[recv data]", pos - packetsize, sizein, "IGNORED")
     if sizein < packetsize:
         print("[completed]")
         break
