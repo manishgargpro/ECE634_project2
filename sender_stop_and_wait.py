@@ -13,7 +13,7 @@ filename = sys.argv[3]
 
 filestats = os.stat(filename)
 
-packetsize = 256
+packetsize = 32
 
 timeout = 200    #in milliseconds
 
@@ -24,13 +24,18 @@ sock.bind((UDP_IP, UDP_PORT_IN))
 sock.settimeout(timeout/1000)
 
 def sendpacket(p, pos, st):
-    sock.sendto(packet, (UDP_IP, UDP_PORT_OUT))
-    print(st, pos - sizeout, sizeout)
+    checksum = 0
+    for i in p:
+        checksum += ord(i)
+    pack = p + str(checksum)
+    sock.sendto(pack.encode(), (UDP_IP, UDP_PORT_OUT))
+    print(st, pos - len(p), len(p))
+    # print(pack)
 
-with open(filename, "rb") as f:
+
+with open(filename, "r") as f:
     packet = f.read(packetsize)
     while packet:
-        sizeout = len(packet)
         pos = f.tell()
         sendpacket(packet, pos, "[send data]")
         ack = {}
